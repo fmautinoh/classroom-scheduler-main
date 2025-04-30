@@ -14,36 +14,36 @@ import { AlertCircle } from "lucide-react"
 interface FormValidationAlertProps {
   open: boolean
   onOpenChange: (open: boolean) => void
+  errors: string[]
   title?: string
-  description?: string
-  errors?: string[]
 }
 
 export function FormValidationAlert({
   open,
   onOpenChange,
+  errors,
   title = "Error de Validación",
-  description = "Por favor corrija los siguientes errores:",
-  errors = [],
 }: FormValidationAlertProps) {
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle className="flex items-center gap-2 text-destructive">
-            <AlertCircle className="h-5 w-5" />
+          <AlertDialogTitle className="flex items-center gap-2">
+            <AlertCircle className="h-5 w-5 text-destructive" />
             {title}
           </AlertDialogTitle>
-          <AlertDialogDescription>{description}</AlertDialogDescription>
-          {errors.length > 0 && (
-            <ul className="mt-2 list-disc pl-5 text-sm">
+          <AlertDialogDescription className="text-destructive">
+            Por favor corrija los siguientes errores:
+          </AlertDialogDescription>
+          <div className="mt-2">
+            <ul className="list-disc pl-5 space-y-1">
               {errors.map((error, index) => (
-                <li key={index} className="text-destructive">
+                <li key={index} className="text-sm text-destructive">
                   {error}
                 </li>
               ))}
             </ul>
-          )}
+          </div>
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogAction>Entendido</AlertDialogAction>

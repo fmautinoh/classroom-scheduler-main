@@ -1,6 +1,6 @@
 {
-  "name": "AgendadeAulaFuncional",
-  "version": "1.0.0",
+  "name": "my-v0-project",
+  "version": "0.1.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -9,6 +9,12 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@fullcalendar/core": "latest",
+    "@fullcalendar/daygrid": "latest",
+    "@fullcalendar/interaction": "latest",
+    "@fullcalendar/list": "latest",
+    "@fullcalendar/react": "latest",
+    "@fullcalendar/timegrid": "latest",
     "@hookform/resolvers": "latest",
     "@radix-ui/react-accordion": "1.2.2",
     "@radix-ui/react-alert-dialog": "1.1.4",
@@ -38,6 +44,7 @@
     "@radix-ui/react-toggle-group": "1.1.1",
     "@radix-ui/react-tooltip": "1.1.6",
     "autoprefixer": "^10.4.20",
+    "better-sqlite3": "latest",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "1.0.4",
@@ -47,6 +54,7 @@
     "lucide-react": "^0.454.0",
     "next": "15.2.4",
     "next-themes": "^0.4.4",
+    "path": "latest",
     "react": "^19",
     "react-day-picker": "8.10.1",
     "react-dom": "^19",
@@ -54,21 +62,14 @@
     "react-resizable-panels": "^2.1.7",
     "recharts": "latest",
     "sonner": "^1.7.1",
+    "sql.js": "latest",
     "tailwind-merge": "^2.5.5",
     "tailwindcss-animate": "^1.0.7",
     "vaul": "^0.9.6",
-    "zod": "latest",
-    "@fullcalendar/core": "latest",
-    "sql.js": "latest",
-    "@fullcalendar/react": "latest",
-    "@fullcalendar/daygrid": "latest",
-    "@fullcalendar/timegrid": "latest",
-    "@fullcalendar/interaction": "latest",
-    "@fullcalendar/list": "latest",
-    "better-sqlite3": "latest",
-    "path": "latest"
+    "zod": "latest"
   },
   "devDependencies": {
+    "@types/better-sqlite3": "^7.6.13",
     "@types/node": "^22",
     "@types/react": "^19",
     "@types/react-dom": "^19",

@@ -90,6 +90,8 @@ export function TeacherForm({ open, onOpenChange, teacher }: TeacherFormProps) {
         })
       } else {
         await addTeacher(values)
+        // Esperar un momento para asegurar que la base de datos procese la operación
+        await new Promise((resolve) => setTimeout(resolve, 500))
         toast({
           title: "Docente creado",
           description: "El docente ha sido creado correctamente.",

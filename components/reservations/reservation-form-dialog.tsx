@@ -26,7 +26,6 @@ import { CalendarIcon, Clock } from "lucide-react"
 import { format } from "date-fns"
 import { es } from "date-fns/locale"
 import { cn } from "@/lib/utils"
-// Importar el componente de alerta de validación
 import { FormValidationAlert } from "@/components/ui/form-validation-alert"
 
 interface ReservationFormDialogProps {
@@ -57,10 +56,9 @@ export function ReservationFormDialog({
   initialDate,
   initialClassroomId,
 }: ReservationFormDialogProps) {
-  const { courses, teachers, classrooms, addReservation, updateReservation } = useSchedule()
+  const { courses, teachers, classrooms, addReservation, updateReservation, refreshData } = useSchedule()
   const { toast } = useToast()
   const [isSubmitting, setIsSubmitting] = useState(false)
-  // Añadir estado para controlar la alerta de validación
   const [validationAlertOpen, setValidationAlertOpen] = useState(false)
   const [validationErrors, setValidationErrors] = useState<string[]>([])
 
@@ -117,7 +115,7 @@ export function ReservationFormDialog({
     }
   }, [reservation, form, initialDate, initialClassroomId])
 
-  // Modificar la función onSubmit para mostrar alertas de validación
+  // Modificar la función onSubmit para incluir una verificación de datos en el servidor
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     // Verificar si hay errores de validación
     const formErrors = form.formState.errors
@@ -164,6 +162,40 @@ export function ReservationFormDialog({
         return
       }
 
+      // Forzar una actualización de datos antes de crear la reserva
+      await refreshData()
+
+      // Añadir un pequeño retraso para asegurar que la actualización se ha completado
+      await new Promise((resolve) => setTimeout(resolve, 500))
+
+      // Validar que los elementos relacionados existan después de la actualización
+      if (!courses.some((c) => c.id === rest.courseId)) {
+        setValidationErrors([
+          "El curso seleccionado no existe o ha sido eliminado. Por favor, actualice la página e intente nuevamente.",
+        ])
+        setValidationAlertOpen(true)
+        setIsSubmitting(false)
+        return
+      }
+
+      if (!teachers.some((t) => t.id === rest.teacherId)) {
+        setValidationErrors([
+          "El docente seleccionado no existe o ha sido eliminado. Por favor, actualice la página e intente nuevamente.",
+        ])
+        setValidationAlertOpen(true)
+        setIsSubmitting(false)
+        return
+      }
+
+      if (!classrooms.some((c) => c.id === rest.classroomId)) {
+        setValidationErrors([
+          "El aula seleccionada no existe o ha sido eliminada. Por favor, actualice la página e intente nuevamente.",
+        ])
+        setValidationAlertOpen(true)
+        setIsSubmitting(false)
+        return
+      }
+
       const reservationData = {
         ...rest,
         startTime: startDate.toISOString(),
@@ -186,14 +218,24 @@ export function ReservationFormDialog({
 
       onOpenChange(false)
     } catch (error: any) {
-      setValidationErrors([error.message || "Ocurrió un error al procesar la reserva. Intente nuevamente."])
+      console.error("Error al procesar la reserva:", error)
+
+      // Manejar específicamente el error de clave foránea
+      if (error.message && error.message.includes("FOREIGN KEY constraint failed")) {
+        setValidationErrors([
+          "Error de relación: Uno o más elementos relacionados no existen en la base de datos.",
+          "Por favor, actualice la página e intente nuevamente.",
+        ])
+      } else {
+        setValidationErrors([error.message || "Ocurrió un error al procesar la reserva. Intente nuevamente."])
+      }
+
       setValidationAlertOpen(true)
     } finally {
       setIsSubmitting(false)
     }
   }
 
-  // Añadir el componente de alerta de validación al final del componente, justo antes del return final
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
@@ -467,7 +509,12 @@ export function ReservationFormDialog({
         </DialogContent>
       </Dialog>
 
-      <FormValidationAlert open={validationAlertOpen} onOpenChange={setValidationAlertOpen} errors={validationErrors} />
+      <FormValidationAlert
+        open={validationAlertOpen}
+        onOpenChange={setValidationAlertOpen}
+        errors={validationErrors}
+        title="Error de Validación"
+      />
     </>
   )
 }

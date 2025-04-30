@@ -162,7 +162,15 @@ export function ScheduleProvider({ children }: { children: ReactNode }) {
       }
 
       await db.courses.add(newCourse)
-      setCourses((prev) => [...prev, newCourse])
+
+      // Esperar un momento para asegurar que la base de datos procese la operación
+      await new Promise((resolve) => setTimeout(resolve, 300))
+
+      // Recargar los datos para asegurar la sincronización
+      await refreshData()
+
+      // Eliminamos esta línea para evitar la duplicación
+      // setCourses((prev) => [...prev, newCourse])
     } catch (error) {
       console.error("Error adding course:", error)
       throw error
@@ -234,7 +242,15 @@ export function ScheduleProvider({ children }: { children: ReactNode }) {
       }
 
       await db.teachers.add(newTeacher)
-      setTeachers((prev) => [...prev, newTeacher])
+
+      // Esperar un momento para asegurar que la base de datos procese la operación
+      await new Promise((resolve) => setTimeout(resolve, 300))
+
+      // Recargar los datos para asegurar la sincronización
+      await refreshData()
+
+      // Eliminamos esta línea para evitar la duplicación
+      // setTeachers((prev) => [...prev, newTeacher])
     } catch (error) {
       console.error("Error adding teacher:", error)
       throw error
@@ -298,7 +314,15 @@ export function ScheduleProvider({ children }: { children: ReactNode }) {
       }
 
       await db.classrooms.add(newClassroom)
-      setClassrooms((prev) => [...prev, newClassroom])
+
+      // Esperar un momento para asegurar que la base de datos procese la operación
+      await new Promise((resolve) => setTimeout(resolve, 300))
+
+      // Recargar los datos para asegurar la sincronización
+      await refreshData()
+
+      // Eliminamos esta línea para evitar la duplicación
+      // setClassrooms((prev) => [...prev, newClassroom])
     } catch (error) {
       console.error("Error adding classroom:", error)
       throw error
@@ -355,12 +379,20 @@ export function ScheduleProvider({ children }: { children: ReactNode }) {
   // Reservation CRUD operations
   const addReservation = async (reservation: any) => {
     try {
+      // Validar que existan los registros relacionados
       const course = courses.find((c) => c.id === reservation.courseId)
-      const teacher = teachers.find((t) => t.id === reservation.teacherId)
-      const classroom = classrooms.find((c) => c.id === reservation.classroomId)
+      if (!course) {
+        throw new Error("El curso seleccionado no existe o ha sido eliminado")
+      }
 
-      if (!course || !teacher || !classroom) {
-        throw new Error("Datos de reserva inválidos")
+      const teacher = teachers.find((t) => t.id === reservation.teacherId)
+      if (!teacher) {
+        throw new Error("El docente seleccionado no existe o ha sido eliminado")
+      }
+
+      const classroom = classrooms.find((c) => c.id === reservation.classroomId)
+      if (!classroom) {
+        throw new Error("El aula seleccionada no existe o ha sido eliminada")
       }
 
       // Check for overlapping reservations
@@ -394,7 +426,16 @@ export function ScheduleProvider({ children }: { children: ReactNode }) {
         classroom: classroom.name,
       }
 
-      await db.reservations.add(newReservation)
+      try {
+        await db.reservations.add(newReservation)
+      } catch (error: any) {
+        console.error("Error en la base de datos:", error)
+        // Manejar específicamente el error de clave foránea
+        if (error.message && error.message.includes("FOREIGN KEY constraint failed")) {
+          throw new Error("Error de relación: Uno o más elementos relacionados no existen en la base de datos")
+        }
+        throw error
+      }
 
       setReservations((prev) => [...prev, newReservation])
 
@@ -421,12 +462,20 @@ export function ScheduleProvider({ children }: { children: ReactNode }) {
         throw new Error("Reserva no encontrada")
       }
 
+      // Validar que existan los registros relacionados
       const course = courses.find((c) => c.id === reservation.courseId)
-      const teacher = teachers.find((t) => t.id === reservation.teacherId)
-      const classroom = classrooms.find((c) => c.id === reservation.classroomId)
+      if (!course) {
+        throw new Error("El curso seleccionado no existe o ha sido eliminado")
+      }
 
-      if (!course || !teacher || !classroom) {
-        throw new Error("Datos de reserva inválidos")
+      const teacher = teachers.find((t) => t.id === reservation.teacherId)
+      if (!teacher) {
+        throw new Error("El docente seleccionado no existe o ha sido eliminado")
+      }
+
+      const classroom = classrooms.find((c) => c.id === reservation.classroomId)
+      if (!classroom) {
+        throw new Error("El aula seleccionada no existe o ha sido eliminada")
       }
 
       // Check for overlapping reservations (excluding this reservation)
@@ -458,7 +507,16 @@ export function ScheduleProvider({ children }: { children: ReactNode }) {
         classroom: classroom.name,
       }
 
-      await db.reservations.update(id, reservation)
+      try {
+        await db.reservations.update(id, reservation)
+      } catch (error: any) {
+        console.error("Error en la base de datos:", error)
+        // Manejar específicamente el error de clave foránea
+        if (error.message && error.message.includes("FOREIGN KEY constraint failed")) {
+          throw new Error("Error de relación: Uno o más elementos relacionados no existen en la base de datos")
+        }
+        throw error
+      }
 
       setReservations((prev) => prev.map((r) => (r.id === id ? updatedReservation : r)))
 

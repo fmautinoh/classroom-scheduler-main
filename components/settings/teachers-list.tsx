@@ -40,10 +40,11 @@ export function TeachersList({ teachers, onEdit }: TeachersListProps) {
         title: "Docente eliminado",
         description: "El docente ha sido eliminado correctamente.",
       })
-    } catch (error) {
+    } catch (error: any) {
+      console.error("Error al eliminar docente:", error)
       toast({
         title: "Error al eliminar",
-        description: "No se pudo eliminar el docente. Verifique que no tenga reservas asociadas.",
+        description: error.message || "No se pudo eliminar el docente. Verifique que no tenga reservas asociadas.",
         variant: "destructive",
       })
     } finally {

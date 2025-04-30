@@ -285,12 +285,36 @@ export const dbService = {
       .get(id) as Reservation | undefined
   },
 
+  // Mejorar el manejo de errores en la función addReservation
   addReservation: (
     reservation: Omit<Reservation, "id" | "courseName" | "courseColor" | "teacherName" | "classroom">,
   ) => {
-    // Verificar si hay solapamiento de reservas
-    const overlappingReservations = db
-      .prepare(`
+    try {
+      // Verificar que existan los registros relacionados antes de intentar crear la reserva
+      const courseExists = db
+        .prepare("SELECT COUNT(*) as count FROM courses WHERE id = ?")
+        .get(reservation.courseId) as { count: number }
+      if (courseExists.count === 0) {
+        throw new Error("El curso seleccionado no existe en la base de datos")
+      }
+
+      const teacherExists = db
+        .prepare("SELECT COUNT(*) as count FROM teachers WHERE id = ?")
+        .get(reservation.teacherId) as { count: number }
+      if (teacherExists.count === 0) {
+        throw new Error("El docente seleccionado no existe en la base de datos")
+      }
+
+      const classroomExists = db
+        .prepare("SELECT COUNT(*) as count FROM classrooms WHERE id = ?")
+        .get(reservation.classroomId) as { count: number }
+      if (classroomExists.count === 0) {
+        throw new Error("El aula seleccionada no existe en la base de datos")
+      }
+
+      // Verificar si hay solapamiento de reservas
+      const overlappingReservations = db
+        .prepare(`
       SELECT COUNT(*) as count FROM reservations 
       WHERE classroomId = ? 
       AND (
@@ -299,44 +323,56 @@ export const dbService = {
         (startTime >= ? AND endTime <= ?)
       )
     `)
-      .get(
-        reservation.classroomId,
-        reservation.startTime,
-        reservation.startTime,
-        reservation.endTime,
-        reservation.endTime,
-        reservation.startTime,
-        reservation.endTime,
-      ) as { count: number }
+        .get(
+          reservation.classroomId,
+          reservation.startTime,
+          reservation.startTime,
+          reservation.endTime,
+          reservation.endTime,
+          reservation.startTime,
+          reservation.endTime,
+        ) as { count: number }
 
-    if (overlappingReservations.count > 0) {
-      throw new Error("Ya existe una reserva para esta aula en el horario seleccionado")
-    }
+      if (overlappingReservations.count > 0) {
+        throw new Error("Ya existe una reserva para esta aula en el horario seleccionado")
+      }
 
-    const id = generateId()
-    const createdAt = new Date().toISOString()
-    const status = reservation.status || "programado"
+      const id = generateId()
+      const createdAt = new Date().toISOString()
+      const status = reservation.status || "programado"
 
-    db.prepare(`
+      db.prepare(`
       INSERT INTO reservations 
       (id, courseId, teacherId, classroomId, grade, section, startTime, endTime, topic, status, createdAt) 
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).run(
-      id,
-      reservation.courseId,
-      reservation.teacherId,
-      reservation.classroomId,
-      reservation.grade,
-      reservation.section,
-      reservation.startTime,
-      reservation.endTime,
-      reservation.topic,
-      status,
-      createdAt,
-    )
+        id,
+        reservation.courseId,
+        reservation.teacherId,
+        reservation.classroomId,
+        reservation.grade,
+        reservation.section,
+        reservation.startTime,
+        reservation.endTime,
+        reservation.topic,
+        status,
+        createdAt,
+      )
 
-    // Obtener la reserva completa con los datos relacionados
-    return dbService.getReservationById(id) as Reservation
+      // Obtener la reserva completa con los datos relacionados
+      return dbService.getReservationById(id) as Reservation
+    } catch (error: any) {
+      console.error("Error al crear reserva:", error)
+
+      // Proporcionar un mensaje de error más descriptivo
+      if (error.code === "SQLITE_CONSTRAINT_FOREIGNKEY") {
+        throw new Error(
+          "Error de relación: Uno o más elementos relacionados no existen en la base de datos. Por favor, actualice la página e intente nuevamente.",
+        )
+      }
+
+      throw error
+    }
   },
 
   updateReservation: (

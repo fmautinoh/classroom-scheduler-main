@@ -40,10 +40,11 @@ export function CoursesList({ courses, onEdit }: CoursesListProps) {
         title: "Curso eliminado",
         description: "El curso ha sido eliminado correctamente.",
       })
-    } catch (error) {
+    } catch (error: any) {
+      console.error("Error al eliminar curso:", error)
       toast({
         title: "Error al eliminar",
-        description: "No se pudo eliminar el curso. Verifique que no tenga reservas asociadas.",
+        description: error.message || "No se pudo eliminar el curso. Verifique que no tenga reservas asociadas.",
         variant: "destructive",
       })
     } finally {

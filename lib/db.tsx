@@ -39,9 +39,10 @@ const coursesDB = {
       method: "DELETE",
     })
 
+    const data = await response.json()
+
     if (!response.ok) {
-      const error = await response.json()
-      throw new Error(error.error || "Error al eliminar curso")
+      throw new Error(data.error || "Error al eliminar curso")
     }
   },
 }
@@ -85,9 +86,10 @@ const teachersDB = {
       method: "DELETE",
     })
 
+    const data = await response.json()
+
     if (!response.ok) {
-      const error = await response.json()
-      throw new Error(error.error || "Error al eliminar docente")
+      throw new Error(data.error || "Error al eliminar docente")
     }
   },
 }
@@ -131,9 +133,10 @@ const classroomsDB = {
       method: "DELETE",
     })
 
+    const data = await response.json()
+
     if (!response.ok) {
-      const error = await response.json()
-      throw new Error(error.error || "Error al eliminar aula")
+      throw new Error(data.error || "Error al eliminar aula")
     }
   },
 }
@@ -149,15 +152,29 @@ const reservationsDB = {
   add: async (
     reservation: Omit<Reservation, "id" | "courseName" | "courseColor" | "teacherName" | "classroom">,
   ): Promise<void> => {
-    const response = await fetch("/api/reservations", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(reservation),
-    })
+    try {
+      const response = await fetch("/api/reservations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(reservation),
+      })
 
-    if (!response.ok) {
-      const error = await response.json()
-      throw new Error(error.error || "Error al añadir reserva")
+      if (!response.ok) {
+        const error = await response.json()
+        const errorMessage = error.error || "Error al añadir reserva"
+
+        // Proporcionar un mensaje más descriptivo para el error de clave foránea
+        if (errorMessage.includes("FOREIGN KEY constraint failed") || errorMessage.includes("Error de relación")) {
+          throw new Error(
+            "Error de relación: Uno o más elementos relacionados no existen en la base de datos. Por favor, actualice la página e intente nuevamente.",
+          )
+        }
+
+        throw new Error(errorMessage)
+      }
+    } catch (error: any) {
+      console.error("Error en la solicitud de reserva:", error)
+      throw error
     }
   },
 
@@ -195,9 +212,10 @@ const reservationsDB = {
       method: "DELETE",
     })
 
+    const data = await response.json()
+
     if (!response.ok) {
-      const error = await response.json()
-      throw new Error(error.error || "Error al eliminar reserva")
+      throw new Error(data.error || "Error al eliminar reserva")
     }
   },
 }

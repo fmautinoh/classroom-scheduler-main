@@ -40,10 +40,11 @@ export function ClassroomsList({ classrooms, onEdit }: ClassroomsListProps) {
         title: "Aula eliminada",
         description: "El aula ha sido eliminada correctamente.",
       })
-    } catch (error) {
+    } catch (error: any) {
+      console.error("Error al eliminar aula:", error)
       toast({
         title: "Error al eliminar",
-        description: "No se pudo eliminar el aula. Verifique que no tenga reservas asociadas.",
+        description: error.message || "No se pudo eliminar el aula. Verifique que no tenga reservas asociadas.",
         variant: "destructive",
       })
     } finally {

@@ -117,6 +117,8 @@ export function CourseForm({ open, onOpenChange, course }: CourseFormProps) {
         })
       } else {
         await addCourse(values)
+        // Esperar un momento para asegurar que la base de datos procese la operación
+        await new Promise((resolve) => setTimeout(resolve, 500))
         toast({
           title: "Curso creado",
           description: "El curso ha sido creado correctamente.",

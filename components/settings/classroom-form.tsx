@@ -96,6 +96,8 @@ export function ClassroomForm({ open, onOpenChange, classroom }: ClassroomFormPr
         })
       } else {
         await addClassroom(values)
+        // Esperar un momento para asegurar que la base de datos procese la operación
+        await new Promise((resolve) => setTimeout(resolve, 500))
         toast({
           title: "Aula creada",
           description: "El aula ha sido creada correctamente.",
