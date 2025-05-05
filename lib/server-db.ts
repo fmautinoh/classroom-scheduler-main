@@ -473,7 +473,26 @@ export const dbService = {
   },
 
   deleteReservation: (id: string) => {
-    db.prepare("DELETE FROM reservations WHERE id = ?").run(id)
-    return true
+    try {
+      // Verificar que la reserva existe antes de eliminarla
+      const reservation = db.prepare("SELECT * FROM reservations WHERE id = ?").get(id)
+      if (!reservation) {
+        throw new Error("La reserva no existe")
+      }
+
+      // Eliminar la reserva
+      db.prepare("DELETE FROM reservations WHERE id = ?").run(id)
+
+      // Verificar que la reserva se eliminó correctamente
+      const deletedReservation = db.prepare("SELECT * FROM reservations WHERE id = ?").get(id)
+      if (deletedReservation) {
+        throw new Error("Error al eliminar la reserva")
+      }
+
+      return true
+    } catch (error) {
+      console.error("Error al eliminar la reserva:", error)
+      throw error
+    }
   },
 }
