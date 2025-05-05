@@ -267,7 +267,7 @@ export function ScheduleProvider({ children }: { children: ReactNode }) {
         setReservations((prev) =>
           prev.map((r) => {
             if (r.teacherId === id) {
-              return { ...r, teacherName: teacher.name }
+              return { ...r, teacherName: teacher.name ?? '' }
             }
             return r
           }),
@@ -276,7 +276,7 @@ export function ScheduleProvider({ children }: { children: ReactNode }) {
         setRecentReservations((prev) =>
           prev.map((r) => {
             if (r.teacherId === id) {
-              return { ...r, teacherName: teacher.name }
+              return { ...r, teacherName: teacher.name ?? '' }
             }
             return r
           }),
@@ -339,7 +339,7 @@ export function ScheduleProvider({ children }: { children: ReactNode }) {
         setReservations((prev) =>
           prev.map((r) => {
             if (r.classroomId === id) {
-              return { ...r, classroom: classroom.name }
+              return { ...r, classroom: classroom.name! }
             }
             return r
           }),
@@ -348,7 +348,7 @@ export function ScheduleProvider({ children }: { children: ReactNode }) {
         setRecentReservations((prev) =>
           prev.map((r) => {
             if (r.classroomId === id) {
-              return { ...r, classroom: classroom.name }
+              return { ...r, classroom: classroom.name! }
             }
             return r
           }),
@@ -546,12 +546,17 @@ export function ScheduleProvider({ children }: { children: ReactNode }) {
     try {
       await db.reservations.remove(id)
 
-      setReservations((prev) => prev.filter((r) => r.id !== id))
+      // Esperar un momento para asegurar que la base de datos procese la operación
+      await new Promise((resolve) => setTimeout(resolve, 300))
 
-      // Update recent reservations if needed
+      // Recargar los datos para asegurar la sincronización
+      await refreshData()
+
+      // Actualizar el estado local
+      setReservations((prev) => prev.filter((r) => r.id !== id))
       setRecentReservations((prev) => prev.filter((r) => r.id !== id))
 
-      // Update stats
+      // Actualizar estadísticas
       setStats((prev) => ({
         ...prev,
         totalReservations: prev.totalReservations - 1,
@@ -666,7 +671,10 @@ export function ScheduleProvider({ children }: { children: ReactNode }) {
     updateReservation,
     updateReservationStatus,
     deleteReservation,
-    generateReport,
+    generateReport: async (filters: any): Promise<void> => {
+      const reservations = await generateReport(filters);
+      setReportData(reservations);
+    },
   }
 
   return <ScheduleContext.Provider value={contextValue}>{children}</ScheduleContext.Provider>
